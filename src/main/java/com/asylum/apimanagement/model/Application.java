@@ -1,10 +1,17 @@
 package com.asylum.apimanagement.model;
 
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Digits;
@@ -18,8 +25,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.sql.*;
 
 @Entity
 @Table(name = "applications", uniqueConstraints = {
@@ -125,4 +130,56 @@ public class Application {
 		this.crimes = crimes;
 	}
 
+	public Application(int id, String firstName, String middleName, String lastName, String gender, Date birthDate,
+			String birthCountry, String citizenCountry, String phone, String email, String address, String race,
+			int height, String eyeColor, String hairColor, String degree, String degreeName, boolean advOverthrow,
+			boolean reliPersecuted, boolean nazi, boolean crimes) {
+		this.id = id;
+		this.firstName = firstName;
+		this.middleName = middleName;
+		this.lastName = lastName;
+		this.gender = gender;
+		this.birthDate = birthDate;
+		this.birthCountry = birthCountry;
+		this.citizenCountry = citizenCountry;
+		this.phone = phone;
+		this.email = email;
+		this.address = address;
+		this.race = race;
+		this.height = height;
+		this.eyeColor = eyeColor;
+		this.hairColor = hairColor;
+		this.degree = degree;
+		this.degreeName = degreeName;
+		this.advOverthrow = advOverthrow;
+		this.reliPersecuted = reliPersecuted;
+		this.nazi = nazi;
+		this.crimes = crimes;
+	}
+
+	@OneToMany(mappedBy = "application")
+	@JsonManagedReference
+	private List<Medication> medicines;
+	@OneToMany(mappedBy = "application")
+	@JsonManagedReference
+
+	private List<Family> families;
+
+	public void add(Medication med) {
+		if (medicines == null) {
+			medicines = new ArrayList<>();
+
+		}
+		medicines.add(med);
+		med.setApplication(this);
+	}
+
+	public void add(Family fam) {
+		if (families == null) {
+			families = new ArrayList<>();
+
+		}
+		families.add(fam);
+		fam.setApplication(this);
+	}
 }

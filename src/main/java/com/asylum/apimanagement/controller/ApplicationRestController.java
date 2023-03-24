@@ -1,11 +1,11 @@
 package com.asylum.apimanagement.controller;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +29,8 @@ import com.asylum.apimanagement.dao.Request;
 import com.asylum.apimanagement.exceptions.ApplicationNotFoundException;
 import com.asylum.apimanagement.exceptions.InvalidRequestException;
 import com.asylum.apimanagement.model.Application;
+import com.asylum.apimanagement.model.Family;
+import com.asylum.apimanagement.model.Medication;
 import com.asylum.apimanagement.service.ApplicationService;
 import com.asylum.apimanagement.service.FilterSpecification;
 
@@ -64,21 +67,22 @@ public class ApplicationRestController {
 		return result;
 	}
 
-	@GetMapping(value="/applications/", params = {"page", "size", "sort"})
-	public List<Application> searchSpec(@RequestBody Request request, @RequestParam("page") int page, @RequestParam("size") int size , @RequestParam("orderBy") String orderBy, @RequestParam("sort") String sort) {
-		
-		Specification<Application> sSpec = spec.getSearchSpecification(request.getSearchReq(), request.getGlobalOperator());
+	@GetMapping(value = "/applications/", params = { "page", "size", "sort" })
+	public List<Application> searchSpec(@RequestBody Request request, @RequestParam("page") int page,
+			@RequestParam("size") int size, @RequestParam("orderBy") String orderBy,
+			@RequestParam("sort") String sort) {
+
+		Specification<Application> sSpec = spec.getSearchSpecification(request.getSearchReq(),
+				request.getGlobalOperator());
 		List<Application> result = new ArrayList<>();
-		if(sort.equals("ASC")){
+		if (sort.equals("ASC")) {
 			Pageable pageable = PageRequest.of(page, size, Sort.by(Direction.ASC, orderBy));
-			result = ApplicationService.findAll(sSpec,pageable).getContent();
-		}
-		else
-		{
+			result = ApplicationService.findAll(sSpec, pageable).getContent();
+		} else {
 			Pageable pageable = PageRequest.of(page, size, Sort.by(Direction.DESC, orderBy));
-			result = ApplicationService.findAll(sSpec,pageable).getContent();
+			result = ApplicationService.findAll(sSpec, pageable).getContent();
 		}
-		
+
 		return result;
 	}
 
@@ -91,6 +95,31 @@ public class ApplicationRestController {
 			throw new ApplicationNotFoundException("Application ID not found");
 		}
 		return res;
+	}
+
+	@GetMapping("/applications/{applicationId}/medication")
+	public List<Medication> getApplicantsMedication(@PathVariable int applicationId)
+			throws ApplicationNotFoundException {
+
+		Optional<Application> res = ApplicationService.findById(applicationId);
+
+		if (res == null) {
+			throw new ApplicationNotFoundException("Application ID not found");
+		}
+		List<Medication> meds = res.get().getMedicines();
+		return meds;
+	}
+
+	@GetMapping("/applications/{applicationId}/families")
+	public List<Family> getApplicantsFamilies(@PathVariable int applicationId) throws ApplicationNotFoundException {
+
+		Optional<Application> res = ApplicationService.findById(applicationId);
+
+		if (res == null) {
+			throw new ApplicationNotFoundException("Application ID not found");
+		}
+		List<Family> fams = res.get().getFamilies();
+		return fams;
 	}
 
 	@PostMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -131,4 +160,9 @@ public class ApplicationRestController {
 		ApplicationService.deleteApplication(applicationId);
 	}
 
+	@RequestMapping("user")
+	@ResponseBody
+	public Principal user(Principal principal) {
+		return principal;
+	}
 }
